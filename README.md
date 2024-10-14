@@ -1,4 +1,4 @@
-# II2120_UDP
+# 14_Tugas Socket Programming
 Tugas UDP Socket Programming II2120 - Jaringan Komputer\
 \
 Oleh:\
