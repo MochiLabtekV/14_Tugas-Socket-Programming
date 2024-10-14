@@ -6,3 +6,5 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext
+
+type = socket.SOCK_DGRAM
