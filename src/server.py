@@ -7,6 +7,6 @@ import threading
 from tkinter import *
 from tkinter import scrolledtext
 
-#Inisialisasi socket dengan type = socket.SOCK_DGRAM
+#Initialize socket type = socket.SOCK_DGRAM
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server.bind(("localhost", 55555)) #Max port number: 65535
