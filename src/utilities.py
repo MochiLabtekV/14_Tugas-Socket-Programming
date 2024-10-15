@@ -42,10 +42,10 @@ def search_index(data: DictOfArr, key: str, value:Union[str,int]) -> int :
     index = 0
     while index<=len(data[key]) and data[key][index] != value:
         index+=1
-    if index == len(data)+1: #kalau gak ketemu
+    if index == len(data)+1: #if not found
         return -9999
     else:
-        return index #indeks kalau ketemu
+        return index #if index found
     
 def printDict(dictionary: dict):
     for key in dictionary:
