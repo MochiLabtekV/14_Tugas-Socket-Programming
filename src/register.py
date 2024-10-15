@@ -1,6 +1,6 @@
 from utilities import validate_input
 
-def register_user(id, username, sudah_login, client_data):
+def register_client(id, username, sudah_login, client_data):
     id = id if id != 0 else 0
     username = username if username!="" else ""
 
@@ -27,7 +27,7 @@ def register_user(id, username, sudah_login, client_data):
             client_data["password"].append(password)
 
             # Print welcome
-            print(f"Welcome to the chatroom, Client {username}!")
+            print(f"Welcome to the chatroom {username}!")
             sudah_login = True
             id = len(client_data["id"])
 
