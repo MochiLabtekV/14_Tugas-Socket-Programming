@@ -17,7 +17,7 @@ tcp_server.bind((ipAddress, portServer + 1))  # Use different port for TCP
 tcp_server.listen(5)
 
 clients = set()
-client_usernames = {}  # Menyimpan username dari setiap client
+client_usernames = {} 
 
 def generate_password():
     global password
@@ -34,8 +34,8 @@ def start_server():
         message, client_address = udp_server.recvfrom(1024)
         if client_address not in clients:
             clients.add(client_address)
-            username = message.decode('utf-8').split(":")[0]  # Mengambil username dari pesan
-            client_usernames[client_address] = username  # Simpan username
+            username = message.decode('utf-8').split(":")[0]  
+            client_usernames[client_address] = username  
             notify_clients(client_address, "has joined the chat")
             window.after(100, update_client_list)
         else:
@@ -55,7 +55,7 @@ def forward_message(message, sender_address):
         if client != sender_address:
             formatted_message = f"{client_usernames[sender_address]}: {message.decode('utf-8').split(':', 1)[1]}"  # Hanya tampilkan isi pesan
             udp_server.sendto(formatted_message.encode('utf-8'), client)
-    window.after(100, lambda: chat_log.insert(END, f"{client_usernames[sender_address]}: {message.decode('utf-8').split(':', 1)[1]}\n"))
+    window.after(100, lambda: chat_log.insert(END, f"{client_usernames[sender_address]}:{message.decode('utf-8').split(':', 1)[1]}\n"))
 
 # Send ACK using TCP
 def send_ack(client_address):
