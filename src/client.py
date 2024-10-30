@@ -7,7 +7,7 @@ from utilities import validate_input
 from reglog import register_client, login_client
 
 client = None
-server_address = ('127.0.0.1', 55555)
+server_address = None
 
 def command_prompt():
     global client
@@ -58,9 +58,20 @@ def initialize_gui():
     window.mainloop()
 
 def setup_client():
-    global client
+    global client, server_address
+    IpAddress = input("Masukkan IP Address Server: ") 
+    portServer = int(input("Masukkan Port Number Server: "))
+    clientPort = int(input("Masukkan Port Number Client: "))
+
+    # Create UDP socket
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client.bind(('127.0.0.1', 0))
+    
+    # Bind the client to the specified client port
+    client.bind(('', clientPort))
+
+    # Set the server address using user input
+    server_address = (IpAddress, portServer)
+    
     command_prompt()
 
 # Run the setup and start command prompt

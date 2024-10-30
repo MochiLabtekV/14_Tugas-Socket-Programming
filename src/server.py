@@ -4,8 +4,11 @@ from tkinter import *
 from tkinter import scrolledtext
 
 # Set up server
+ipAddress = input("Enter server IP (127.0.0.1): ")
+portServer = int(input("Enter server port (55555): "))
+
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server.bind(('127.0.0.1', 55555))
+server.bind((ipAddress, portServer))
 
 clients = set()
 
