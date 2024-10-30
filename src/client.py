@@ -92,8 +92,6 @@ def setup_client():
 
     # Create UDP socket
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    
-    # Bind socket ke port yang diinginkan oleh client
     client.bind(('', clientPort))  # Bind ke clientPort yang diinput
 
     # Set the server address using user input
