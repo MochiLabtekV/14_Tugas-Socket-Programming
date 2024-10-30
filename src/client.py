@@ -25,12 +25,18 @@ def command_prompt():
             initialize_gui()
     else:
         print("Invalid choice. Please enter 1 or 2.")
-
+        
 def receive_message():
     global client
     while True:
         message, _ = client.recvfrom(1024)
-        window.after(100,chat_log.insert(END, f"Client {client.getsockname()} : {message.decode('utf-8')} \n"))
+        decoded_message = message.decode('utf-8')
+        
+        try:
+            sender_address, message_content = decoded_message.split(': ', 1)
+            window.after(100, chat_log.insert(END, f"{sender_address} : {message_content}\n"))
+        except ValueError:
+            window.after(100, chat_log.insert(END, f"{decoded_message}\n"))
 
 def send_message():
     global client, username
