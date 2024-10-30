@@ -38,7 +38,8 @@ def notify_clients(client_address, message):
 def forward_message(message, sender_address):
     for client in clients:
         if client != sender_address:
-            server.sendto(message, client)
+            formatted_message = f"{sender_address}: {message.decode('utf-8')}"
+            server.sendto(formatted_message.encode('utf-8'), client)
     window.after(100, lambda: chat_log.insert(END, f"Client {sender_address} : {message.decode('utf-8')}\n"))
 
 # Function to initialize the GUI
