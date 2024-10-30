@@ -50,7 +50,7 @@ def send_message():
     global client, username
     message = entry_message.get()
     if message and client:
-        formatted_message = f"{username}: {message}"
+        formatted_message = f"{username}:{message}"
         chat_log.insert(END, f"You: {message}\n")
         client.sendto(formatted_message.encode('utf-8'), server_address)  # UDP send
         entry_message.delete(0, END)
