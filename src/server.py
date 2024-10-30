@@ -48,10 +48,10 @@ def initialize_gui():
     main_frame = Frame(window)
     main_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
     Label(main_frame, text="Chat Log:").grid(row=0, column=0, padx=(0, 10), sticky="w")
-    chat_log = scrolledtext.ScrolledText(main_frame, width=70, height=10)
+    chat_log = scrolledtext.ScrolledText(main_frame, width=60, height=20)
     chat_log.grid(row=1, column=0, padx=(0, 10))
     Label(main_frame, text="List of Connected Clients:").grid(row=0, column=1, sticky="w")
-    list_clients = Listbox(main_frame, height=10, width=50)
+    list_clients = Listbox(main_frame, width=30, height=20)
     list_clients.grid(row=1, column=1)
     thread = threading.Thread(target=start_server)
     thread.daemon = True
