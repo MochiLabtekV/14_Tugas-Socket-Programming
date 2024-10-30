@@ -22,12 +22,12 @@ def register_client():
 
     if any(user['username'] == username for user in user_data):
         print("Username already taken. Please try again.")
-        return False
+        return None 
     else:
         user_id = len(user_data) + 1
         write_csv(user_id, username, password)
         print(f"Registration successful! Welcome, {username}!")
-        return True
+        return username 
 
 # Login client with username and password check
 def login_client():
@@ -38,6 +38,6 @@ def login_client():
     for user in user_data:
         if user['username'] == username and user['password'] == password:
             print(f"Login successful! Welcome back, {username}!")
-            return True
+            return username 
     print("Invalid username or password. Please try again.")
-    return False
+    return None 
