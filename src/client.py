@@ -28,10 +28,11 @@ def command_prompt():
         print("Invalid choice. Please enter 1 or 2.")
 
 def validate_password():
-    global password
+    #global password
+    password = 111
     while True:
-        passClient = input("Insert chatroom password: ")
-        if passClient == password:
+        passClient = int(input("Insert chatroom password: "))
+        if (passClient == password):
             initialize_gui()
             break
         else:
@@ -64,14 +65,17 @@ def initialize_gui():
     window = Tk()
     window.title("Client")
 
+    chat_label = Label(window, text="MochiLabtekV ʕ•́ᴥ•̀ʔっ♡ ", font=("Arial", 10, "bold"))
+    chat_label.grid(column=0, row=0, padx=10, pady=(10, 5))
+
     chat_log = scrolledtext.ScrolledText(window, width=70, height=10)
-    chat_log.grid(column=0, row=0, padx=10, pady=10)
+    chat_log.grid(column=0, row=1, padx=10, pady=10)
 
     entry_message = Entry(window, width=60)
-    entry_message.grid(column=0, row=1, padx=10, pady=10)
+    entry_message.grid(column=0, row=2, padx=10, pady=10)
 
     send_button = Button(window, text="Send", command=send_message)
-    send_button.grid(column=0, row=2, padx=10, pady=10)
+    send_button.grid(column=0, row=3, padx=10, pady=10)
 
     threading.Thread(target=receive_message, daemon=True).start()
     window.mainloop()
