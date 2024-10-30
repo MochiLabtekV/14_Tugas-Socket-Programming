@@ -8,9 +8,10 @@ from reglog import register_client, login_client
 
 client = None
 server_address = None
+username = None
 
 def command_prompt():
-    global client
+    global client, username
     print("Welcome! Please choose an option:")
     print("1. Register")
     print("2. Login")
@@ -29,12 +30,13 @@ def receive_message():
     global client
     while True:
         message, _ = client.recvfrom(1024)
-        window.after(100, lambda: chat_log.insert(END, f"{message.decode('utf-8')}\n"))
+        window.after(100,chat_log.insert(END, f"Client {client.getsockname()} : {message.decode('utf-8')} \n"))
 
 def send_message():
-    global client
+    global client, username
     message = entry_message.get()
     if message and client:
+        formatted_message = f"{username}: {message}"
         chat_log.insert(END, f"You: {message}\n")
         client.sendto(message.encode('utf-8'), server_address)
         entry_message.delete(0, END)
