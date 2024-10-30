@@ -2,7 +2,7 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext
-from password import RNG
+import password
 
 # Set up UDP server for receiving messages
 ipAddress = input("Enter server IP: ")
@@ -19,9 +19,11 @@ tcp_server.listen(5)
 clients = set()
 client_usernames = {} 
 
-def generate_password():
-    global password
-    password = RNG(100, 999)
+password_input = input("Set password for Chatroom: ")
+
+# Write the password to password.py
+with open("password.py", "w") as f:
+    f.write(f'password = "{password_input}"')
 
 def update_client_list():
     list_clients.delete(0, END)
@@ -78,7 +80,7 @@ def initialize_gui():
     chatroom_label = Label(main_frame, text="MochiLabtekV ʕ•́ᴥ•̀ʔっ♡ ", font=("Arial", 12, "bold"))
     chatroom_label.grid(row=0, column=0, columnspan=2, pady=(0, 10), sticky="w")
 
-    password_label = Label(main_frame, text=f"Chatroom Password: {password}", font=("Arial", 10, "bold"))
+    password_label = Label(main_frame, text=f"Chatroom Password: {password_input}", font=("Arial", 10, "bold"))
     password_label.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky="w")
 
     Label(main_frame, text="Chat Log:").grid(row=2, column=0, padx=(0, 10), sticky="w")
@@ -94,5 +96,4 @@ def initialize_gui():
     thread.start()
     window.mainloop()
 
-generate_password()
 initialize_gui()

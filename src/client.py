@@ -27,16 +27,22 @@ def command_prompt():
     else:
         print("Invalid choice. Please enter 1 or 2.")
 
+
 def validate_password():
-    password = 111
+    import password  # Import inside the function to get the latest value
     while True:
-        passClient = int(input("Insert chatroom password: "))
-        if (passClient == password):
+        passClient = input("Insert chatroom password: ")
+        
+        # Re-import password to get updated value
+        import importlib
+        importlib.reload(password)
+        
+        if passClient == password.password:  # Compare with the current password
             initialize_gui()
             break
         else:
             print("Wrong password!")
-
+            
 def receive_message():
     global client
     while True:
