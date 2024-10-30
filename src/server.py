@@ -2,6 +2,7 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext
+from RNG import RNG
 import password
 
 # Set up UDP server for receiving messages
@@ -19,7 +20,7 @@ tcp_server.listen(5)
 clients = set()
 client_usernames = {} 
 
-password_input = input("Set password for Chatroom: ")
+password_input = RNG(100,999)
 
 # Write the password to password.py
 with open("password.py", "w") as f:
