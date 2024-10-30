@@ -2,6 +2,7 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext
+from password import RNG
 
 # Set up server
 ipAddress = input("Enter server IP: ")
@@ -11,6 +12,10 @@ server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server.bind((ipAddress, portServer))
 
 clients = set()
+
+def generate_password():
+    global password
+    password = RNG(100, 999)
 
 def update_client_list():
     list_clients.delete(0, END)
@@ -44,22 +49,29 @@ def forward_message(message, sender_address):
 
 # Function to initialize the GUI
 def initialize_gui():
-    global window, chat_log, list_clients
+    global window, chat_log, list_clients, password
 
     window = Tk()
     window.title("Server")
 
     main_frame = Frame(window)
     main_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-    Label(main_frame, text="Chat Log:").grid(row=0, column=0, padx=(0, 10), sticky="w")
+
+    password_label = Label(main_frame, text=f"Chatroom Password: {password}", font=("Arial", 10, "bold"))
+    password_label.grid(row=0, column=0, columnspan=2, pady=(0, 10), sticky="w")
+
+    Label(main_frame, text="Chat Log:").grid(row=1, column=0, padx=(0, 10), sticky="w")
     chat_log = scrolledtext.ScrolledText(main_frame, width=60, height=20)
-    chat_log.grid(row=1, column=0, padx=(0, 10))
-    Label(main_frame, text="List of Connected Clients:").grid(row=0, column=1, sticky="w")
+    chat_log.grid(row=2, column=0, padx=(0, 10))
+
+    Label(main_frame, text="List of Connected Clients:").grid(row=1, column=1, sticky="w")
     list_clients = Listbox(main_frame, width=30, height=20)
-    list_clients.grid(row=1, column=1)
+    list_clients.grid(row=2, column=1)
+
     thread = threading.Thread(target=start_server)
     thread.daemon = True
     thread.start()
     window.mainloop()
 
+generate_password()
 initialize_gui()

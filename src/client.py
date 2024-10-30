@@ -17,14 +17,25 @@ def command_prompt():
     print("2. Login")
     choice = input("Enter your choice: ")
     
-    if choice == '1':
+    if choice == "1":
         if register_client():
-            initialize_gui()
-    elif choice == '2':
+            validate_password()
+            
+    elif choice == "2":
         if login_client():
-            initialize_gui()
+            validate_password()
     else:
         print("Invalid choice. Please enter 1 or 2.")
+
+def validate_password():
+    global password
+    while True:
+        passClient = input("Insert chatroom password: ")
+        if passClient == password:
+            initialize_gui()
+            break
+        else:
+            print("Wrong password!")
         
 def receive_message():
     global client
@@ -67,9 +78,9 @@ def initialize_gui():
 
 def setup_client():
     global client, server_address
-    IpAddress = input("Masukkan IP Address Server: ") 
-    portServer = int(input("Masukkan Port Number Server: "))
-    clientPort = int(input("Masukkan Port Number Client: "))
+    IpAddress = input("Insert Server IP Address: ") 
+    portServer = int(input("Insert Server Port Number: "))
+    clientPort = int(input("Insert Client Port Number: "))
 
     # Create UDP socket
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
