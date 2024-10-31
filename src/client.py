@@ -87,6 +87,8 @@ def initialize_gui():
     send_button = Button(window, text="Send", command=send_message)
     send_button.grid(column=0, row=3, padx=10, pady=10)
 
+    entry_message.bind("<Return>", lambda event: send_message())
+
     threading.Thread(target=receive_message, daemon=True).start()
     window.mainloop()
 
