@@ -1,10 +1,11 @@
 import socket
 import threading
 from tkinter import *
-from tkinter import scrolledtext
+from tkinter import scrolledtext, filedialog, messagebox
 from utilities import validate_input
 from reglog import register_client, login_client
 import re
+import os
 
 client = None
 server_address = None
@@ -38,15 +39,11 @@ def command_prompt():
         print("Invalid choice. Please enter 1 or 2.")
 
 def validate_password():
-    import password  # Import inside the function to get the latest value
+    import password
+    expected_password = password.password  # Simpan password di sini
     while True:
         passClient = input("Insert chatroom password: ")
-        
-        # Re-import password to get updated value
-        import importlib
-        importlib.reload(password)
-        
-        if passClient == password.password:  # Compare with the current password
+        if passClient == expected_password:
             initialize_gui()
             break
         else:
@@ -58,6 +55,8 @@ def receive_message():
         try:
             message = client.recv(1024).decode('utf-8')  # TCP recv
             chat_log.insert(END, f"{message}\n")
+            if message.startswith("FILE:"):
+                handle_received_file(message)
         except:
             break
 
@@ -71,12 +70,65 @@ def send_message():
         entry_message.delete(0, END)
         receive_ack()  # Wait for TCP ACK
 
+def send_file(filepath):
+    global client, username
+    if filepath:
+        filename = os.path.basename(filepath)
+        chat_log.insert(END, f"You are sending file: {filename}\n")
+        
+        # Send file information to the server
+        client.sendto(f"FILE:{username}:{filename}".encode('utf-8'), server_address)
+
+        # Send binary file data to the server
+        with open(filepath, 'rb') as file:
+            data = file.read(1024)
+            while data:
+                client.sendto(data, server_address)  # Send file data to the server
+                data = file.read(1024)
+
+        # Send a signal that the file has been fully sent
+        client.sendto(b'', server_address)  # Send an empty message as a signal that file sending is complete
+        chat_log.insert(END, f"File {filename} sent successfully!\n")
+        receive_ack()  # Wait for ACK from the server after sending the file
+
+def attach_file():
+    filepath = filedialog.askopenfilename()  # Dialog to choose a file
+    if filepath:
+        send_file(filepath)  # Send the selected file to the server
+
+def handle_received_file(message):
+    # Parse the message to get the sender's username and file name
+    _, sender_username, filename = message.split(':', 2)  # Split the message to get sender information and file name
+    # Save the received file
+    with open(filename, 'wb') as f:
+        while True:
+            data = client.recv(1024)  # Receiving file data from the server
+            if not data:
+                break
+            f.write(data)
+    
+    # Update the chat log that the file has been received
+    chat_log.insert(END, f"File {filename} received from {sender_username}.\n")
+    
+    # Display a message box to open a file
+    confirm_open_file(filename)
+
+def confirm_open_file(filename):
+    if messagebox.askyesno("Open File", f"File {filename} received. Do you want to open it?"):
+        if os.path.isfile(filename):
+            try:
+                os.startfile(filename)  # Opening file (Windows)
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not open file: {e}")
+        else:
+            messagebox.showerror("Error", f"File {filename} does not exist.")
+
 def receive_ack():
     tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_client.connect((server_address[0], server_address[1] + 1))  # Connect to TCP server
     ack = tcp_client.recv(1024).decode('utf-8')
     tcp_client.close()
-    # ACK diterima, tapi tidak ditampilkan di client
+    # ACK received, but not displayed on the client
 
 def initialize_gui():
     global window, chat_log, entry_message
@@ -96,6 +148,9 @@ def initialize_gui():
     send_button = Button(window, text="Send", command=send_message)
     send_button.grid(column=0, row=3, padx=10, pady=10)
 
+    attach_file_button = Button(window, text="Attach File", command=attach_file)
+    attach_file_button.grid(column=0, row=4, padx=10, pady=10)
+
     entry_message.bind("<Return>", lambda event: send_message())
 
     threading.Thread(target=receive_message, daemon=True).start()
@@ -111,11 +166,11 @@ def setup_client():
             print("Invalid IP address. Please enter a valid IP.")
 
     portServer = int(input("Insert Server Port Number: "))
-    clientPort = int(input("Insert Client Port Number: "))  # Input port untuk client
+    clientPort = int(input("Insert Client Port Number: "))  
 
     # Create UDP socket
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client.bind(('', clientPort))  # Bind ke clientPort yang diinput
+    client.bind(('', clientPort))  # Bind to the input clientPort
 
     # Set the server address using user input
     server_address = (IpAddress, portServer)
