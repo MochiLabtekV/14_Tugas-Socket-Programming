@@ -1,9 +1,10 @@
 import socket
 import threading
 from tkinter import *
-from tkinter import scrolledtext
+from tkinter import scrolledtext, messagebox
 from RNG import RNG
 import password
+import os
 
 # Function to validate IP address
 def is_valid_ip(ip):
@@ -43,21 +44,64 @@ with open("password.py", "w") as f:
 def update_client_list():
     list_clients.delete(0, END)
     for client in clients:
-        list_clients.insert(END, f"Client = {client_usernames[client]} : {client[0]}:{client[1]}")  # Menampilkan username
+        list_clients.insert(END, f"Client = {client_usernames[client]} : {client[0]}:{client[1]}")  # Displaying username
 
 # Server function to receive and forward messages
 def start_server():
     while True:
-        message, client_address = udp_server.recvfrom(1024)
-        if client_address not in clients:
-            clients.add(client_address)
-            username = message.decode('utf-8').split(":")[0]  
-            client_usernames[client_address] = username  
-            notify_clients(client_address, "has joined the chat")
-            window.after(100, update_client_list)
-        else:
-            forward_message(message, client_address)
-        send_ack(client_address)
+        try:
+            message, client_address = udp_server.recvfrom(1024)
+            if client_address not in clients:
+                clients.add(client_address)
+                username = message.decode('utf-8').split(":")[0]  
+                client_usernames[client_address] = username  
+                notify_clients(client_address, "has joined the chat")
+                window.after(100, update_client_list)
+            else:
+                if message.decode('utf-8').startswith("FILE:"):
+                    handle_file_transfer(message, client_address)
+                else:
+                    forward_message(message, client_address)
+            send_ack(client_address)
+        except Exception as e:
+            print(f"Error: {e}")  # Add error output for debugging
+
+# Handle file transfer
+def handle_file_transfer(message, sender_address):
+    _, username, filename = message.decode('utf-8').split(':', 2)
+    
+    try:
+        with open(filename, 'wb') as f:
+            while True:
+                data, addr = udp_server.recvfrom(1024)
+                if not data:  # Stop sending if an empty message is received
+                    break
+                f.write(data)
+
+        window.after(100, lambda: chat_log.insert(END, f"File {filename} received from {username}.\n"))
+        
+        # Confirmation dialog to open a file
+        window.after(100, lambda: confirm_open_file(filename))
+        
+        # Send the file to all other clients
+        with open(filename, 'rb') as f:
+            file_data = f.read(1024)
+            while file_data:
+                for client in clients:
+                    if client != sender_address:
+                        udp_server.sendto(f"FILE:{username}:{filename}".encode('utf-8'), client)  # Kirim informasi file
+                        udp_server.sendto(file_data, client)  # Kirim data file
+                file_data = f.read(1024)
+    except Exception as e:
+        window.after(100, lambda: chat_log.insert(END, f"Error receiving file: {e}\n"))
+
+# Confirm to open the received file
+def confirm_open_file(filename):
+    if messagebox.askyesno("Open File", f"File {filename} received. Do you want to open it?"):
+        try:
+            os.startfile(filename)  # Windows only
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open file: {e}")
 
 # Notify all clients when a new client connects
 def notify_clients(client_address, message):
@@ -70,17 +114,21 @@ def notify_clients(client_address, message):
 def forward_message(message, sender_address):
     for client in clients:
         if client != sender_address:
-            formatted_message = f"{client_usernames[sender_address]}: {message.decode('utf-8').split(':', 1)[1]}"  # Hanya tampilkan isi pesan
+            formatted_message = f"{client_usernames[sender_address]}: {message.decode('utf-8').split(':', 1)[1]}" 
             udp_server.sendto(formatted_message.encode('utf-8'), client)
     window.after(100, lambda: chat_log.insert(END, f"{client_usernames[sender_address]}:{message.decode('utf-8').split(':', 1)[1]}\n"))
 
 # Send ACK using TCP
 def send_ack(client_address):
-    tcp_client, _ = tcp_server.accept()  # Wait for TCP connection from client
-    ack_message = "ACK"
-    tcp_client.send(ack_message.encode('utf-8'))  # Send ACK to client
-    tcp_client.close()
-    window.after(100, lambda: chat_log.insert(END, f"ACK sent to {client_address}\n"))
+    try:
+        tcp_client, _ = tcp_server.accept()  # Wait for TCP connection from client
+        ack_message = "ACK"
+        tcp_client.send(ack_message.encode('utf-8'))  # Send ACK to client
+    except Exception as e:
+        print(f"Error sending ACK: {e}")
+    finally:
+        tcp_client.close()  # Ensure the TCP connection is closed
+        window.after(100, lambda: chat_log.insert(END, f"ACK sent to {client_address}\n"))
 
 # Function to initialize the GUI
 def initialize_gui():
