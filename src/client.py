@@ -4,10 +4,20 @@ from tkinter import *
 from tkinter import scrolledtext
 from utilities import validate_input
 from reglog import register_client, login_client
+import re
 
 client = None
 server_address = None
 username = None
+
+def validate_ip(ip):
+    # Regex untuk memvalidasi alamat IP
+    pattern = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
+    if re.match(pattern, ip):
+        # Memastikan setiap oktet antara 0 dan 255
+        octets = ip.split(".")
+        return all(0 <= int(octet) <= 255 for octet in octets)
+    return False
 
 def command_prompt():
     global client, username  
@@ -27,7 +37,6 @@ def command_prompt():
     else:
         print("Invalid choice. Please enter 1 or 2.")
 
-
 def validate_password():
     import password  # Import inside the function to get the latest value
     while True:
@@ -42,7 +51,7 @@ def validate_password():
             break
         else:
             print("Wrong password!")
-            
+
 def receive_message():
     global client
     while True:
@@ -94,7 +103,13 @@ def initialize_gui():
 
 def setup_client():
     global client, server_address
-    IpAddress = input("Insert Server IP Address: ") 
+    while True:
+        IpAddress = input("Insert Server IP Address: ")
+        if validate_ip(IpAddress):
+            break
+        else:
+            print("Invalid IP address. Please enter a valid IP.")
+
     portServer = int(input("Insert Server Port Number: "))
     clientPort = int(input("Insert Client Port Number: "))  # Input port untuk client
 
