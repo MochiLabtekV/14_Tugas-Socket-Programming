@@ -5,8 +5,22 @@ from tkinter import scrolledtext
 from RNG import RNG
 import password
 
+# Function to validate IP address
+def is_valid_ip(ip):
+    parts = ip.split('.')
+    if len(parts) != 4:
+        return False
+    for part in parts:
+        if not part.isdigit() or not 0 <= int(part) <= 255:
+            return False
+    return True
+
 # Set up UDP server for receiving messages
 ipAddress = input("Enter server IP: ")
+while not is_valid_ip(ipAddress):
+    print("Invalid IP address. Please enter a valid IPv4 address.")
+    ipAddress = input("Enter server IP: ")
+
 portServer = int(input("Enter server port: "))
 
 udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -18,9 +32,9 @@ tcp_server.bind((ipAddress, portServer + 1))  # Use different port for TCP
 tcp_server.listen(5)
 
 clients = set()
-client_usernames = {} 
+client_usernames = {}
 
-password_input = RNG(100,999)
+password_input = RNG(100, 999)
 
 # Write the password to password.py
 with open("password.py", "w") as f:
