@@ -8,12 +8,13 @@ import password
 import os
 
 # Set up UDP server for receiving messages
-ipAddress = input("Enter server IP: ")
+ipAddress = input("Enter Server IP: ")
 while not is_valid_ip(ipAddress):
     print("Invalid IP address. Please enter a valid IPv4 address.")
-    ipAddress = input("Enter server IP: ")
+    ipAddress = input("Enter Server IP: ")
 
-portServer = int(input("Enter server port: "))
+portServer = int(input("Enter Server port: "))
+chatroom_password = input("Enter Chatroom password: ")
 
 udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_server.bind((ipAddress, portServer))
@@ -26,36 +27,41 @@ tcp_server.listen(5)
 clients = set()
 client_usernames = {}
 
-password_input = RNG(100, 999)
+#password_input = RNG(100, 999)
 
 # Write the password to password.py
-with open("password.py", "w") as f:
-    f.write(f'password = "{password_input}"')
+#with open("password.py", "w") as f:
+#    f.write(f'password = "{password_input}"')
 
 def update_client_list():
     list_clients.delete(0, END)
     for client in clients:
         list_clients.insert(END, f"Client = {client_usernames[client]} : {client[0]}:{client[1]}")  # Displaying username
 
-# Server function to receive and forward messages
 def start_server():
     while True:
         try:
             message, client_address = udp_server.recvfrom(1024)
-            if client_address not in clients:
-                clients.add(client_address)
-                username = message.decode('utf-8').split(":")[0]  
-                client_usernames[client_address] = username  
-                notify_clients(client_address, "has joined the chat")
-                window.after(100, update_client_list)
-            else:
-                if message.decode('utf-8').startswith("FILE:"):
-                    handle_file_transfer(message, client_address)
+            message = message.decode('utf-8')
+
+            # Check if it's an authentication message
+            if message.startswith("AUTH |"):
+                _, username, password = message.split("|", 2)
+                if password.strip() == chatroom_password:  # Check password
+                    clients.add(client_address)
+                    client_usernames[client_address] = username.strip()
+                    udp_server.sendto("AUTH_SUCCESS".encode('utf-8'), client_address)
+                    notify_clients(client_address, "has joined the chat")
                 else:
-                    forward_message(message, client_address)
-            send_ack(client_address)
+                    udp_server.sendto("AUTH_FAILED".encode('utf-8'), client_address)
+            else:
+                # Handle other types of messages (e.g., chat messages)
+                forward_message(message.encode('utf-8'), client_address)
+
+            send_ack(client_address)  # Send ACK after processing the message
         except Exception as e:
-            print(f"Error: {e}")  # Add error output for debugging
+            print(f"Error: {e}")  # Debug output for any exceptions
+
 
 # Handle file transfer
 def handle_file_transfer(message, sender_address):
@@ -136,7 +142,7 @@ def send_ack(client_address):
 
 # Function to initialize the GUI
 def initialize_gui():
-    global window, chat_log, list_clients, password
+    global window, chat_log, list_clients
 
     window = Tk()
     window.title("Server")
@@ -147,7 +153,7 @@ def initialize_gui():
     chatroom_label = Label(main_frame, text="MochiLabtekV ʕ•́ᴥ•̀ʔっ♡ ", font=("Arial", 12, "bold"))
     chatroom_label.grid(row=0, column=0, columnspan=2, pady=(0, 10), sticky="w")
 
-    password_label = Label(main_frame, text=f"Chatroom Password: {password_input}", font=("Arial", 10, "bold"))
+    password_label = Label(main_frame, text=f"Chatroom Password: {chatroom_password}", font=("Arial", 10, "bold"))
     password_label.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky="w")
 
     Label(main_frame, text="Chat Log:").grid(row=2, column=0, padx=(0, 10), sticky="w")

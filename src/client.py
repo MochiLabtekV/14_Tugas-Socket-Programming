@@ -11,33 +11,39 @@ server_address = None
 username = None
 
 def command_prompt():
-    global client, username  
+    global username  # Ensure username is global
     print("Welcome! Please choose an option:")
     print("1. Register")
     print("2. Login")
     choice = input("Enter your choice: ")
-    
+
     if choice == "1":
-        username = register_client()  
+        username = register_client()
         if username:
-            validate_password()  
+            authenticate()
     elif choice == "2":
-        username = login_client()  
+        username = login_client()
         if username:
-            validate_password()  
+            authenticate()
     else:
         print("Invalid choice. Please enter 1 or 2.")
 
-def validate_password():
-    import password
-    expected_password = password.password  # Simpan password di sini
-    while True:
-        passClient = input("Insert chatroom password: ")
-        if passClient == expected_password:
-            initialize_gui()
-            break
-        else:
-            print("Wrong password!")
+
+def authenticate():
+    global username
+    client_input_password = input("Enter chatroom password: ")
+    
+    client.sendto(f"AUTH | {username} | {client_input_password}".encode(), server_address)
+
+    response, _ = client.recvfrom(1024)
+    response = response.decode()
+
+    if response == "AUTH_SUCCESS":
+        print("Password is correct. Welcome to the chatroom!")
+        initialize_gui()  # Initialize GUI on successful authentication
+    else:
+        print("Wrong password!")
+        exit()
 
 def receive_message():
     global client
@@ -147,10 +153,10 @@ def initialize_gui():
     window.mainloop()
 
 def setup_client():
-    global client, server_address
+    global client, server_address, IpAddress, portServer
     while True:
         IpAddress = input("Insert Server IP Address: ")
-        if (IpAddress):
+        if IpAddress:
             break
         else:
             print("Invalid IP address. Please enter a valid IP.")
@@ -165,7 +171,9 @@ def setup_client():
     # Set the server address using user input
     server_address = (IpAddress, portServer)
     
+    # Start command prompt in a separate thread
     command_prompt()
+
 
 # Run the setup and start command prompt
 setup_client()
