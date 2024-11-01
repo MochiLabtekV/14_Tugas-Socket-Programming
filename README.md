@@ -1,6 +1,7 @@
 # 14_Tugas Socket Programming
->Tugas UDP Socket Programming II2120 - Jaringan Komputer\
+>Tugas UDP Socket Programming II2120 - Jaringan Komputer
 
+\
 # Deskripsi Tugas
 1. Memahami protokol UDP, beserta dengan segala keuntungan dan kelemahannya.
 2. Mempelajari socket programming dengan membuat program sederhana yang memanfaatkannya sebagai fungsi utamanya.
@@ -8,8 +9,8 @@
 \
 # Contributors
 Fathimah Nurhumaida Ramadhani (18223052)\
-Nurul Na'im Natifah (18223106)\
-
+Nurul Na'im Natifah (18223106)
+\
 # Setup Environment
 - Operating system: Windows
 - Bahasa pemrograman: Python
