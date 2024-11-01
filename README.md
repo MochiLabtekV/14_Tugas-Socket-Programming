@@ -19,6 +19,10 @@ Nurul Na'im Natifah (18223106)
 
 # How to Run
 1. Download dan extract repository ini di dua device berbeda.
-2. Jalankan folder "src" di terminal.
-3. Jalankan server.py di terminal device server.
-4. Jalankan client.py di terminal device client.
+2. Pastikan kedua device telah terhubung pada satu jaringan hotspot yang sama.
+3. Jalankan folder "src" di terminal.
+4. Gunakan IP Address device server tiap permintaan input IP Address server.
+5. Jalankan server.py di terminal device server ("py server.py" ATAU "python server.py").
+6. Jalankan client.py di terminal device client ("py client.py" ATAU "python client.py").
+7. Setelah client berhasil terhubung ke server, lakukan autentikasi chatroom menggunakan password yang telah diatur server.
+8. Gunakan GUI chatroom pada masing-masing device untuk bertukar pesan.
