@@ -110,16 +110,29 @@ def forward_message(message, sender_address):
     window.after(100, lambda: chat_log.insert(END, f"{client_usernames[sender_address]}:{message.decode('utf-8').split(':', 1)[1]}\n"))
 
 # Send ACK using TCP
+sequence_number = 0
+
 def send_ack(client_address):
+    global sequence_number
     try:
-        tcp_client, _ = tcp_server.accept()  # Wait for TCP connection from client
-        ack_message = "ACK"
-        tcp_client.send(ack_message.encode('utf-8'))  # Send ACK to client
+        # Accept connection from client
+        tcp_client, _ = tcp_server.accept()
+        
+        # Prepare the ACK message with sequence number
+        ack_message = f"ACK-{sequence_number}"
+        
+        # Send ACK message to the client
+        tcp_client.send(ack_message.encode('utf-8'))
+        
+        # Increment the sequence number for the next ACK
+        sequence_number += 1
     except Exception as e:
         print(f"Error sending ACK: {e}")
     finally:
-        tcp_client.close()  # Ensure the TCP connection is closed
-        window.after(100, lambda: chat_log.insert(END, f"ACK sent to {client_address}\n"))
+        tcp_client.close()
+        
+        # Print ACK log with sequence number
+        window.after(100, lambda: chat_log.insert(END, f"ACK-{sequence_number - 1} sent to {client_address}\n"))
 
 # Function to initialize the GUI
 def initialize_gui():
