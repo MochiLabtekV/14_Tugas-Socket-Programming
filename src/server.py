@@ -3,18 +3,9 @@ import threading
 from tkinter import *
 from tkinter import scrolledtext, messagebox
 from RNG import RNG
+from utilities import is_valid_ip
 import password
 import os
-
-# Function to validate IP address
-def is_valid_ip(ip):
-    parts = ip.split('.')
-    if len(parts) != 4:
-        return False
-    for part in parts:
-        if not part.isdigit() or not 0 <= int(part) <= 255:
-            return False
-    return True
 
 # Set up UDP server for receiving messages
 ipAddress = input("Enter server IP: ")

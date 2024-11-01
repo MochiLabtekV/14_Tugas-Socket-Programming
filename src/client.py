@@ -2,23 +2,13 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext, filedialog, messagebox
-from utilities import validate_input
+from utilities import validate_input, is_valid_ip
 from reglog import register_client, login_client
-import re
 import os
 
 client = None
 server_address = None
 username = None
-
-def validate_ip(ip):
-    # Regex untuk memvalidasi alamat IP
-    pattern = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-    if re.match(pattern, ip):
-        # Memastikan setiap oktet antara 0 dan 255
-        octets = ip.split(".")
-        return all(0 <= int(octet) <= 255 for octet in octets)
-    return False
 
 def command_prompt():
     global client, username  
@@ -160,7 +150,7 @@ def setup_client():
     global client, server_address
     while True:
         IpAddress = input("Insert Server IP Address: ")
-        if validate_ip(IpAddress):
+        if (IpAddress):
             break
         else:
             print("Invalid IP address. Please enter a valid IP.")
