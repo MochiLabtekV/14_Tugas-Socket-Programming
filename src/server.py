@@ -2,9 +2,7 @@ import socket
 import threading
 from tkinter import *
 from tkinter import scrolledtext, messagebox
-from RNG import RNG
 from utilities import is_valid_ip
-import password
 import os
 
 # Set up UDP server for receiving messages
@@ -14,13 +12,24 @@ while not is_valid_ip(ipAddress):
     ipAddress = input("Enter Server IP: ")
 
 portServer = int(input("Enter Server port: "))
-chatroom_password = input("Set Chatroom password: ")
+chatroom_password = input("Enter Chatroom password: ")
 
 udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_server.bind((ipAddress, portServer))
 
+# Set up TCP server for sending ACKs
+tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+tcp_server.bind((ipAddress, portServer + 1))  # Use different port for TCP
+tcp_server.listen(5)
+
 clients = set()
 client_usernames = {}
+
+#password_input = RNG(100, 999)
+
+# Write the password to password.py
+#with open("password.py", "w") as f:
+#    f.write(f'password = "{password_input}"')
 
 def update_client_list():
     list_clients.delete(0, END)
@@ -41,21 +50,16 @@ def start_server():
                     client_usernames[client_address] = username.strip()
                     udp_server.sendto("AUTH_SUCCESS".encode('utf-8'), client_address)
                     notify_clients(client_address, "has joined the chat")
-                    update_client_list()  # Update client list after a new client joins
                 else:
                     udp_server.sendto("AUTH_FAILED".encode('utf-8'), client_address)
             else:
-                # If the message is an ACK, skip logging and incrementing ACK
-                if message.startswith("ACK"):
-                    continue  # Skip processing this message
-                else:
-                    # Handle chat messages and log them
-                    forward_message(message.encode('utf-8'), client_address)
+                # Handle other types of messages (e.g., chat messages)
+                forward_message(message.encode('utf-8'), client_address)
 
-            # Send ACK after processing the message
-            send_ack(client_address)  # Send ACK only once after processing the message
+            send_ack(client_address)  # Send ACK after processing the message
         except Exception as e:
             print(f"Error: {e}")  # Debug output for any exceptions
+
 
 # Handle file transfer
 def handle_file_transfer(message, sender_address):
@@ -80,9 +84,9 @@ def handle_file_transfer(message, sender_address):
             while file_data:
                 for client in clients:
                     if client != sender_address:
-                        udp_server.sendto(file_data, client)
+                        udp_server.sendto(f"FILE:{username}:{filename}".encode('utf-8'), client)  # Kirim informasi file
+                        udp_server.sendto(file_data, client)  # Kirim data file
                 file_data = f.read(1024)
-        send_ack(sender_address)  # Only send ACK once after file transfer
     except Exception as e:
         window.after(100, lambda: chat_log.insert(END, f"Error receiving file: {e}\n"))
 
@@ -103,49 +107,41 @@ def notify_clients(client_address, message):
 
 # Forward message to other clients
 def forward_message(message, sender_address):
-    # Decode the message for logging
-    decoded_message = message.decode('utf-8')
-
-    # Check if the message is an ACK
-    if decoded_message.startswith("ACK"):
-        return  # Do not log or process ACK messages
-
-    # Extract the actual message part
-    actual_message = decoded_message.split(":", 1)[-1].strip()  # Get only the message part
-    username = client_usernames[sender_address]  # Get the username of the sender
-
-    # Log the actual message content with username
-    window.after(100, lambda: chat_log.insert(END, f"{username}: {actual_message}\n"))
-
-    # Forward the message to other clients
     for client in clients:
         if client != sender_address:
-            udp_server.sendto(f"{username}: {actual_message}".encode('utf-8'), client)  # Send with username
+            formatted_message = f"{client_usernames[sender_address]}: {message.decode('utf-8').split(':', 1)[1]}" 
+            udp_server.sendto(formatted_message.encode('utf-8'), client)
+    window.after(100, lambda: chat_log.insert(END, f"{client_usernames[sender_address]}:{message.decode('utf-8').split(':', 1)[1]}\n"))
 
-# Send ACK using UDP
+# Send ACK using TCP
 sequence_number = 0
 
 def send_ack(client_address):
     global sequence_number
     try:
+        # Accept connection from client
+        tcp_client, _ = tcp_server.accept()
+        
         # Prepare the ACK message with sequence number
         ack_message = f"ACK-{sequence_number}"
         
         # Send ACK message to the client
-        udp_server.sendto(ack_message.encode('utf-8'), client_address)
-        
-        # Print ACK log with sequence number
-        window.after(100, lambda: chat_log.insert(END, f"{ack_message} sent to {client_address}\n"))
+        tcp_client.send(ack_message.encode('utf-8'))
         
         # Increment the sequence number for the next ACK
         sequence_number += 1
     except Exception as e:
         print(f"Error sending ACK: {e}")
+    finally:
+        tcp_client.close()
+        
+        # Print ACK log with sequence number
+        window.after(100, lambda: chat_log.insert(END, f"ACK-{sequence_number - 1} sent to {client_address}\n"))
 
 # Function to initialize the GUI
 def initialize_gui():
     global window, chat_log, list_clients
-
+ 
     window = Tk()
     window.title("Server")
 
