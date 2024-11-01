@@ -28,7 +28,6 @@ def command_prompt():
     else:
         print("Invalid choice. Please enter 1 or 2.")
 
-
 def authenticate():
     global username
     client_input_password = input("Enter chatroom password: ")
@@ -49,10 +48,13 @@ def receive_message():
     global client
     while True:
         try:
-            message = client.recv(1024).decode('utf-8')  # TCP recv
-            chat_log.insert(END, f"{message}\n")
-            if message.startswith("FILE:"):
-                handle_received_file(message)
+            message, _ = client.recvfrom(1024)  # UDP recv
+            message = message.decode('utf-8')
+            if not message.startswith("ACK-"):  # Only process non-ACK messages
+                chat_log.insert(END, f"{message}\n")
+                if message.startswith("FILE:"):
+                    handle_received_file(message)
+                send_ack()  # Send ACK only for non-ACK messages
         except:
             break
 
@@ -64,7 +66,7 @@ def send_message():
         chat_log.insert(END, f"You: {message}\n")
         client.sendto(formatted_message.encode('utf-8'), server_address)  # UDP send
         entry_message.delete(0, END)
-        receive_ack()  # Wait for TCP ACK
+        send_ack()  # Send ACK via UDP
 
 def send_file(filepath):
     global client, username
@@ -85,7 +87,7 @@ def send_file(filepath):
         # Send a signal that the file has been fully sent
         client.sendto(b'', server_address)  # Send an empty message as a signal that file sending is complete
         chat_log.insert(END, f"File {filename} sent successfully!\n")
-        receive_ack()  # Wait for ACK from the server after sending the file
+        send_ack()  # Send ACK after file sent
 
 def attach_file():
     filepath = filedialog.askopenfilename()  # Dialog to choose a file
@@ -98,7 +100,7 @@ def handle_received_file(message):
     # Save the received file
     with open(filename, 'wb') as f:
         while True:
-            data = client.recv(1024)  # Receiving file data from the server
+            data, _ = client.recvfrom(1024)  # Receiving file data from the server
             if not data:
                 break
             f.write(data)
@@ -119,12 +121,9 @@ def confirm_open_file(filename):
         else:
             messagebox.showerror("Error", f"File {filename} does not exist.")
 
-def receive_ack():
-    tcp_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_client.connect((server_address[0], server_address[1] + 1))  # Connect to TCP server
-    ack = tcp_client.recv(1024).decode('utf-8')
-    tcp_client.close()
-    # ACK received, but not displayed on the client
+def send_ack():
+    ack_message = "ACK"
+    client.sendto(ack_message.encode('utf-8'), server_address)  # Send ACK to the server
 
 def initialize_gui():
     global window, chat_log, entry_message
@@ -154,12 +153,10 @@ def initialize_gui():
 
 def setup_client():
     global client, server_address, IpAddress, portServer
-    while True:
+    IpAddress = input("Insert Server IP Address: ")
+    while not is_valid_ip(IpAddress):
+        print("Invalid IP address. Please enter a valid IPv4 address.")
         IpAddress = input("Insert Server IP Address: ")
-        if IpAddress:
-            break
-        else:
-            print("Invalid IP address. Please enter a valid IP.")
 
     portServer = int(input("Insert Server Port Number: "))
     clientPort = int(input("Insert Client Port Number: "))  
